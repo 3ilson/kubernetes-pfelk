@@ -1,3 +1,3 @@
 # kubernetes-pfelk
 Kubernetes pfELK Configuration 
-Coming Soon
+Coming Soon...soliciting inputs, thoughts, suggestions, examples, etc...
