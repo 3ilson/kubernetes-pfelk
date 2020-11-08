@@ -1,0 +1,35 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kibana
+  namespace: observability
+spec:
+  chart:
+    spec:
+      chart: kibana
+      sourceRef:
+        kind: HelmRepository
+        name: elastic
+        namespace: flux-system
+      version: 7.9.3
+  interval: 1h0m0s
+  releaseName: kibana
+  targetNamespace: observability
+  values:
+    elasticsearchHosts: "http://example.local:80"
+    replicas: 1
+    resources:
+      requests:
+        cpu: "1000m"
+        memory: "2Gi"
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"
+    protocol: http
+    serverHost: "0.0.0.0"
+    httpPort: 5601
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: nginx
