@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: logstash
+    meta.helm.sh/release-namespace: observability
+  name: logstash-45-cleanup
+  namespace: observability
+data:
+  values.yaml: |
+    logstashPipeline:
+      45-cleanup.conf: |
+        # Update as needed to remove unwanted logs based on the priority.id field
+        filter {
+          if [priority][id] in ["78", "46", "45", "43"] {
+            drop { }
+          }
+          mutate {
+            remove_field => ["pfelk_message"]
+            remove_field => ["filter_message"]
+          }
+        }

@@ -1,0 +1,101 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: logstash
+  namespace: observability
+spec:
+  chart:
+    spec:
+      chart: logstash
+      sourceRef:
+        kind: HelmRepository
+        name: elastic
+        namespace: flux-system
+      version: 7.9.3
+  interval: 1h0m0s
+  releaseName: logstash
+  targetNamespace: observability
+  values:
+    replicas: 1
+
+    # Allows you to add any config files in /usr/share/logstash/config/
+    # such as logstash.yml and log4j2.properties
+    #
+    # Note that when overriding logstash.yml, `http.host: 0.0.0.0` should always be included
+    # to make default probes work.
+    logstashConfig:
+      logstash.yml: |
+        http.host: 0.0.0.0
+        xpack.monitoring.elasticsearch.hosts: example.local:80
+
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "1536Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1536Mi"
+
+    extraVolumes: |
+      - name: patterns
+        configMap:
+          name: logstash-patterns
+      - name: databases
+        configMap:
+          name: logstash-database-config
+      - name: templates
+        configMap:
+          name: logstash-template-config
+      - name: geoip-data
+        emptyDir: {}
+
+    extraVolumeMounts: |
+      - name: patterns
+        mountPath: "/usr/share/logstash/pipeline/patterns"
+        readOnly: true
+      - name: databases
+        mountPath: "/usr/share/logstash/databases"
+      - name: templates
+        mountPath: "/usr/share/logstash/templates"
+      - name: geoip-data
+        mountPath: "/usr/share/GeoIP"
+
+    secretMounts:
+      - name: geoip-secret
+        secretName: geoip-secret
+        path: "/usr/share/GeoIP/config"
+
+    extraPorts:
+      - name: firewall
+        containerPort: 5140
+        protocol: UDP
+      - name: suricata
+        containerPort: 5141
+        protocol: TCP
+
+    lifecycle:
+      postStart:
+        exec:
+          command: ["/bin/sh", "-c", "rm /usr/share/logstash/pipeline/logstash.conf; curl -L 'https://github.com/maxmind/geoipupdate/releases/download/v4.3.0/geoipupdate_4.3.0_linux_amd64.tar.gz' | tar xz; chmod +x geoipupdate_4.3.0_linux_amd64/geoipupdate; ./geoipupdate_4.3.0_linux_amd64/geoipupdate -d /usr/share/GeoIP -f /usr/share/GeoIP/config/GeoIP.conf"]
+  valuesFrom:
+    - kind: ConfigMap
+      name: logstash-01-inputs
+    - kind: ConfigMap
+      name: logstash-02-types
+    - kind: ConfigMap
+      name: logstash-03-filter
+    - kind: ConfigMap
+      name: logstash-05-firewall
+    - kind: ConfigMap
+      name: logstash-10-apps
+    - kind: ConfigMap
+      name: logstash-30-geoip
+    - kind: ConfigMap
+      name: logstash-35-rules-desc
+    - kind: ConfigMap
+      name: logstash-36-ports-desc
+    - kind: ConfigMap
+      name: logstash-45-cleanup
+    - kind: ConfigMap
+      name: logstash-50-outputs

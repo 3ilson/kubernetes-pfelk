@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: logstash
+    meta.helm.sh/release-namespace: observability
+  name: logstash-01-inputs
+  namespace: observability
+data:
+  values.yaml: |
+    logstashPipeline:
+      01-inputs.conf: |
+        input {
+          udp {
+            id => "pfELK"
+            type => "firewall"
+            port => 5140
+            #ssl => true
+            #ssl_certificate_authorities => ["/etc/logstash/ssl/YOURCAHERE.crt"]
+            #ssl_certificate => "/etc/logstash/ssl/SERVER.crt"
+            #ssl_key => "/etc/logstash/ssl/SERVER.key"
+            #ssl_verify_mode => "force_peer"
+          }
+          ### Suricata ###
+          tcp {
+            id => "pfELK-Suricata"
+            type => "suricata"
+            port => 5141
+            #ssl => true
+            #ssl_certificate_authorities => ["/etc/logstash/ssl/YOURCAHERE.crt"]
+            #ssl_certificate => "/etc/logstash/ssl/SERVER.crt"
+            #ssl_key => "/etc/logstash/ssl/SERVER.key"
+            #ssl_verify_mode => "force_peer"
+          }
+
+          ### Beats ###
+          beats {
+            id => "Beats"
+            type => "beats"
+            port => 5044
+          }
+        }

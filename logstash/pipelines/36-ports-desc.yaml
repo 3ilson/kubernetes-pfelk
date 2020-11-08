@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: logstash
+    meta.helm.sh/release-namespace: observability
+  name: logstash-36-ports-desc
+  namespace: observability
+data:
+  values.yaml: |
+    logstashPipeline:
+      36-ports-desc.conf: |
+        filter {
+          if [observer][type] == "firewall" {
+            if [destination][port] {
+              translate {
+                field => "[destination][port]"
+                destination => "[destination][service]"
+                dictionary_path => "/usr/share/logstash/databases/service-names-port-numbers.csv"
+                refresh_interval => 300
+                refresh_behaviour => replace
+                #fallback => "%{[destination][port]}"
+              }
+            }
+            if [source][port] {
+              translate {
+                field => "[source][port]"
+                destination => "[source][service]"
+                dictionary_path => "/usr/share/logstash/databases/service-names-port-numbers.csv"
+                refresh_interval => 300
+                refresh_behaviour => replace
+                #fallback => "%{[source][port]}"
+              }
+            }
+          }
+        }
