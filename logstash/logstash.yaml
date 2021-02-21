@@ -59,12 +59,12 @@ spec:
       - name: templates
         mountPath: "/usr/share/logstash/templates"
       - name: geoip-data
-        mountPath: "/usr/share/GeoIP"
+        mountPath: "/var/lib/GeoIP"
 
     secretMounts:
       - name: geoip-secret
         secretName: geoip-secret
-        path: "/usr/share/GeoIP/config"
+        path: "/var/lib/GeoIP/config"
 
     extraPorts:
       - name: firewall
@@ -77,7 +77,7 @@ spec:
     lifecycle:
       postStart:
         exec:
-          command: ["/bin/sh", "-c", "rm /usr/share/logstash/pipeline/logstash.conf; curl -L 'https://github.com/maxmind/geoipupdate/releases/download/v4.3.0/geoipupdate_4.3.0_linux_amd64.tar.gz' | tar xz; chmod +x geoipupdate_4.3.0_linux_amd64/geoipupdate; ./geoipupdate_4.3.0_linux_amd64/geoipupdate -d /usr/share/GeoIP -f /usr/share/GeoIP/config/GeoIP.conf"]
+          command: ["/bin/sh", "-c", "rm /usr/share/logstash/pipeline/logstash.conf; curl -L 'https://github.com/maxmind/geoipupdate/releases/download/v4.3.0/geoipupdate_4.3.0_linux_amd64.tar.gz' | tar xz; chmod +x geoipupdate_4.3.0_linux_amd64/geoipupdate; ./geoipupdate_4.3.0_linux_amd64/geoipupdate -d /var/lib/GeoIP -f /var/lib/GeoIP/config/GeoIP.conf"]
   valuesFrom:
     - kind: ConfigMap
       name: logstash-01-inputs
